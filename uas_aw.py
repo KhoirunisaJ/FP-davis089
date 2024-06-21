@@ -49,7 +49,7 @@ def show_aw_dashboard():
         t.CalendarYear, pc.ProductCategoryKey
     '''
     st.write('## COMPARISON: Penjualan Produk per Kategori')
-    df_sales_by_category = run_query(query_sales_by_category)
+    df_sales_by_category = conn.query(query_sales_by_category)
     selected_year = st.selectbox('Pilih Tahun:', df_sales_by_category['CalendarYear'].unique())
 
     # Visualisasi
@@ -112,7 +112,7 @@ def show_aw_dashboard():
     '''
 
     # Jalankan query dan ambil data
-    df_sales_by_subcategory = run_query(query_sales_by_subcategory)
+    df_sales_by_subcategory = conn.query(query_sales_by_subcategory)
 
     # Visualisasi menggunakan Plotly
     st.header('COMPOSITION: Penjualan Berdasarkan Subkategori Produk')
@@ -172,7 +172,7 @@ def show_aw_dashboard():
         psc.ProductSubcategoryKey, psc.EnglishProductSubcategoryName, p.PromotionKey
     '''
 
-    df_relationship_all = run_query(query_relationship_all)
+    df_relationship_all = conn.query(query_relationship_all)
     st.header('RELATIONSHIP: Penjualan dan Promosi untuk Seluruh Subkategori Produk')
 
     # Visualisasi 
@@ -229,7 +229,7 @@ def show_aw_dashboard():
     '''
 
     # Jalankan query dan ambil data
-    df_annual_sales = run_query(query_annual_sales)
+    df_annual_sales = conn.query(query_annual_sales)
 
     # Visualisasi menggunakan plotly
     st.header('DISTRIBUTION: Penjualan Tahunan untuk Setiap Subkategori Produk')

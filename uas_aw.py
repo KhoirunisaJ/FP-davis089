@@ -6,13 +6,7 @@ import mysql.connector
 import plotly.express as px
 
 # Membuat koneksi ke database MySQL
-conn = mysql.connector.connect(
-    host="kubela.id",
-    user="davis2024irwan",
-    port=3306,
-    password="wh451n9m@ch1n3",
-    database="aw"
-)
+conn = st.connection("mydb_aw", type="sql", autocommit=True)
 
 # Fungsi untuk menjalankan query dan mengembalikan DataFrame
 def run_query(query):

@@ -10,9 +10,7 @@ st.sidebar.markdown("""
     <p>Selamat datang di dashboard by Khoirunisa! 
     Silakan pilih opsi di sidebar untuk menampilkan dashboard Adventure Works atau IMDb.</p>
     </div>
-""",unsafe_allow_html=True)
-
-
+""", unsafe_allow_html=True)
 
 # Pilihan sidebar untuk memilih dashboard
 dashboard_option = st.sidebar.selectbox('Pilih Dashboard:', ('Adventure Works', 'IMDb'))

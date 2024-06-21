@@ -1,23 +1,33 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import mysql.connector
 import plotly.express as px
 import toml
+import mysql.connector
 
 # Membuat koneksi ke database MySQL
-conn = st.connection("mydb", type="sql", autocommit=True)
-def run_query(query, conn):
-    return pd.read_sql(query, conn)
+def create_connection():
+    secrets = toml.load('secrets.toml')
+    db_username = secrets['database']['username']
+    db_password = secrets['database']['password']
+    db_host = secrets['database']['host']
+    db_name = secrets['database']['name']
+    
+    return mysql.connector.connect(
+        host=db_host,
+        user=db_username,
+        password=db_password,
+        database=db_name
+    )
+
+conn = create_connection()
 
 # Fungsi untuk menjalankan query dan mengembalikan DataFrame
-def run_query(query):
+def run_query(query, conn):
     cursor = conn.cursor()
     cursor.execute(query)
     rows = cursor.fetchall()
     columns = [column[0] for column in cursor.description]
-    return pd.DataFrame.from_records(rows, columns=columns)
+    return pd.DataFrame(rows, columns=columns)
 
 def show_aw_dashboard():
     st.title('ADVENTURE WORKS')
@@ -49,7 +59,7 @@ def show_aw_dashboard():
         t.CalendarYear, pc.ProductCategoryKey
     '''
     st.write('## COMPARISON: Penjualan Produk per Kategori')
-    df_sales_by_category = conn.query(query_sales_by_category)
+    df_sales_by_category = run_query(query_sales_by_category, conn)
     selected_year = st.selectbox('Pilih Tahun:', df_sales_by_category['CalendarYear'].unique())
 
     # Visualisasi
@@ -75,15 +85,13 @@ def show_aw_dashboard():
             (2001-2004). Pada tahun 2001 dan 2002, hanya terdapat satu produk yang diproduksi, 
             yaitu bike, dengan total penjualan sebesar 3 juta yang mengalami peningkatan dua kali lipat 
             pada tahun berikutnya. Pada tahun 2003, terdapat tiga produk yaitu bike, clothing, dan accessories 
-            dengan penjualan tertinggi adalah produk bike dan terendah adalah clothing. Pada tahun 2004, 
-            penjualan tertinggi masih tetap bike dan terendah tetap clothing. Dari data ini dapat disimpulkan bahwa 
+            dengan penjualan tertinggi adalah produk bike dan terendah adalah clothing. Pada tahun 2004, penjualan tertinggi masih tetap bike dan terendah tetap clothing. Dari data ini dapat disimpulkan bahwa 
             produk bike secara konsisten mendominasi penjualan sepanjang periode tersebut, sementara produk clothing 
             memiliki penjualan yang paling rendah. Tren ini menunjukkan pentingnya strategi pemasaran yang lebih efektif 
             untuk kategori clothing agar dapat meningkatkan penjualan, sementara mempertahankan dan meningkatkan penjualan 
             untuk produk bike yang sudah unggul.</p>
         </div>
         """, unsafe_allow_html=True)
-
 
     # VISUALISASI COMPOSISION
     # Query untuk mengambil data penjualan berdasarkan subkategori produk
@@ -112,7 +120,7 @@ def show_aw_dashboard():
     '''
 
     # Jalankan query dan ambil data
-    df_sales_by_subcategory = conn.query(query_sales_by_subcategory)
+    df_sales_by_subcategory = run_query(query_sales_by_subcategory, conn)
 
     # Visualisasi menggunakan Plotly
     st.header('COMPOSITION: Penjualan Berdasarkan Subkategori Produk')
@@ -143,14 +151,12 @@ def show_aw_dashboard():
             penjualan tertinggi dengan subkategori mountain bike mencatatkan total penjualan sebesar 4 juta, 
             sementara penjualan terendah terjadi pada kategori accessories dengan subkategori sock yang hanya 
             mencapai total penjualan 2 ribu. Hampir semua subkategori mengalami peningkatan penjualan setiap tahunnya, 
-            meskipun terdapat penurunan pada subkategori road bike pada tahun 2024. Dari data ini, dapat disimpulkan 
+            meskipun terdapat penurunan pada subkategori road bike pada tahun 2004. Dari data ini, dapat disimpulkan 
             bahwa tren umumnya menunjukkan pertumbuhan penjualan, namun perlu perhatian khusus terhadap subkategori yang 
             mengalami penurunan untuk strategi yang lebih baik ke depannya.
             </p>
         </div>
         """, unsafe_allow_html=True)
-
-
 
     # VISUALISASI RELATIONSHIP
     # Visulisasi RELATIONSHIP: Penjualan dan Promosi untuk Seluruh Subkategori Produk
@@ -172,7 +178,7 @@ def show_aw_dashboard():
         psc.ProductSubcategoryKey, psc.EnglishProductSubcategoryName, p.PromotionKey
     '''
 
-    df_relationship_all = conn.query(query_relationship_all)
+    df_relationship_all = run_query(query_relationship_all, conn)
     st.header('RELATIONSHIP: Penjualan dan Promosi untuk Seluruh Subkategori Produk')
 
     # Visualisasi 
@@ -203,7 +209,6 @@ def show_aw_dashboard():
         </div>
         """, unsafe_allow_html=True)
 
-
     # VISUALISASI DISTRIBUTION
     # Query
     query_annual_sales = '''
@@ -229,7 +234,7 @@ def show_aw_dashboard():
     '''
 
     # Jalankan query dan ambil data
-    df_annual_sales = conn.query(query_annual_sales)
+    df_annual_sales = run_query(query_annual_sales, conn)
 
     # Visualisasi menggunakan plotly
     st.header('DISTRIBUTION: Penjualan Tahunan untuk Setiap Subkategori Produk')
@@ -253,14 +258,6 @@ def show_aw_dashboard():
     # Tambahkan informasi saat grafik diklik
     fig.update_layout(clickmode='event+select')
 
-    # Fungsi untuk menampilkan informasi saat grafik diklik
-    def display_click_data(trace, points, selector):
-        for point in points.point_inds:
-            st.write(f"Subkategori: {df_annual_sales.iloc[point]['EnglishProductSubcategoryName']}, Tahun: {df_annual_sales.iloc[point]['CalendarYear']}, Total Penjualan: ${df_annual_sales.iloc[point]['TotalSales']:,.2f}")
-
-    fig.data[0].on_click(display_click_data)
-
-    # Tampilkan plot di aplikasi Streamlit
     st.plotly_chart(fig)
 
     # Deskripsi visualisasi
@@ -273,6 +270,12 @@ def show_aw_dashboard():
             subkategori road bike mengalami penurunan yang cukup signifikan antara tahun 2003 dan 2004, menyoroti fluktuasi pasar dalam periode tersebut.</p>
         </div>
         """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    show_aw_dashboard()
+
+            
+
 
 
 

@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import mysql.connector
 import plotly.express as px
+import toml
 
 # Membuat koneksi ke database MySQL
-conn = st.connection("mydb_aw", type="sql", autocommit=True)
+conn = st.connection("mydb", type="sql", autocommit=True)
 
 # Fungsi untuk menjalankan query dan mengembalikan DataFrame
 def run_query(query):

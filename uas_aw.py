@@ -1,33 +1,36 @@
 import streamlit as st
 import pandas as pd
+import mysql.connector
 import plotly.express as px
 import toml
-import mysql.connector
+import os
+
+def create_connection():
+    try:
+        secrets_path = os.path.join(os.path.dirname(__file__), 'secrets.toml')
+        secrets = toml.load(secrets_path)
+        db_username = secrets['database']['username']
+        db_password = secrets['database']['password']
+        db_host = secrets['database']['host']
+        db_name = secrets['database']['name']  # Adjusted to match your secrets.toml structure
+        return mysql.connector.connect(
+            user=db_username,
+            password=db_password,
+            host=db_host,
+            database=db_name
+        )
+    except KeyError as e:
+        st.error(f"Kunci yang diperlukan tidak ditemukan di secrets.toml: {e}")
+        raise
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat membuat koneksi ke database: {e}")
+        raise
 
 # Membuat koneksi ke database MySQL
-def create_connection():
-    secrets = toml.load('secrets.toml')
-    db_username = secrets['database']['username']
-    db_password = secrets['database']['password']
-    db_host = secrets['database']['host']
-    db_name = secrets['database']['name']
-    
-    return mysql.connector.connect(
-        host=db_host,
-        user=db_username,
-        password=db_password,
-        database=db_name
-    )
-
 conn = create_connection()
 
-# Fungsi untuk menjalankan query dan mengembalikan DataFrame
 def run_query(query, conn):
-    cursor = conn.cursor()
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    columns = [column[0] for column in cursor.description]
-    return pd.DataFrame(rows, columns=columns)
+    return pd.read_sql(query, conn)
 
 def show_aw_dashboard():
     st.title('ADVENTURE WORKS')

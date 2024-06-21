@@ -8,6 +8,8 @@ import toml
 
 # Membuat koneksi ke database MySQL
 conn = st.connection("mydb", type="sql", autocommit=True)
+def run_query(query, conn):
+    return pd.read_sql(query, conn)
 
 # Fungsi untuk menjalankan query dan mengembalikan DataFrame
 def run_query(query):
